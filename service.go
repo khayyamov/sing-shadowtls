@@ -49,7 +49,7 @@ type Handler interface {
 type Service struct {
 	version                int
 	password               string
-	users                  []User
+	Users                  []User
 	handshake              HandshakeConfig
 	handshakeForServerName map[string]HandshakeConfig
 	strictMode             bool
@@ -61,7 +61,7 @@ func NewService(config ServiceConfig) (*Service, error) {
 	service := &Service{
 		version:                config.Version,
 		password:               config.Password,
-		users:                  config.Users,
+		Users:                  config.Users,
 		handshake:              config.Handshake,
 		handshakeForServerName: config.HandshakeForServerName,
 		strictMode:             config.StrictMode,
@@ -79,7 +79,7 @@ func NewService(config ServiceConfig) (*Service, error) {
 	switch config.Version {
 	case 1, 2:
 	case 3:
-		if len(service.users) == 0 {
+		if len(service.Users) == 0 {
 			return nil, E.New("missing users")
 		}
 	default:
@@ -87,6 +87,10 @@ func NewService(config ServiceConfig) (*Service, error) {
 	}
 
 	return service, nil
+}
+
+func (s *Service) AddUser(Users []User) {
+	s.Users = append(s.Users, Users...)
 }
 
 func (s *Service) selectHandshake(clientHelloFrame *buf.Buffer) HandshakeConfig {
@@ -169,7 +173,7 @@ func (s *Service) NewConnection(ctx context.Context, conn net.Conn, metadata M.M
 			clientHelloFrame.Release()
 			return E.Cause(err, "write client handshake")
 		}
-		user, err := verifyClientHello(clientHelloFrame.Bytes(), s.users)
+		user, err := verifyClientHello(clientHelloFrame.Bytes(), s.Users)
 		if err != nil {
 			s.logger.WarnContext(ctx, E.Cause(err, "client hello verify failed"))
 			return bufio.CopyConn(ctx, conn, handshakeConn)
