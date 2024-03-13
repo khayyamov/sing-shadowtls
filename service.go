@@ -5,6 +5,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/hex"
+	"fmt"
 	"net"
 	"os"
 
@@ -91,6 +92,23 @@ func NewService(config ServiceConfig) (*Service, error) {
 
 func (s *Service) AddUser(Users []User) {
 	s.Users = append(s.Users, Users...)
+}
+
+func (s *Service) DeleteUser(users []User) error {
+	for _, user := range users {
+		foundIndex := -1
+		for i, existingUser := range s.Users {
+			if existingUser.Password == user.Password {
+				foundIndex = i
+				break
+			}
+		}
+		if foundIndex == -1 {
+			return fmt.Errorf("user with password %d not found", user.Password)
+		}
+		s.Users = append(s.Users[:foundIndex], s.Users[foundIndex+1:]...)
+	}
+	return nil
 }
 
 func (s *Service) selectHandshake(clientHelloFrame *buf.Buffer) HandshakeConfig {
